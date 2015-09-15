@@ -109,5 +109,9 @@ w_series<- mutate(timeseries, weekday= weekdays(as.Date(date)), w_class = factor
 ww<- group_by(w_series, w_class=as.factor(w_class), interval=as.factor(interval)) %>% summarize(avg_steps=mean(steps, na.rm=TRUE))
 
 # Plot the activity patterns
-ggplot(data=ww,aes(x=interval,y=avg_steps)) + geom_line(colour='red') + facet_wrap(~w_class, scales="free",  nrow = 2) +labs( title="Activity Patterns", y="Frequency in dataset", x="# average steps")
+ggplot(data=ww,aes(x=interval,y=avg_steps)) + geom_point(colour='red') + facet_wrap(~w_class, scales="free",  nrow = 2) +labs( title="Activity Patterns", y="Frequency in dataset", x="# average steps")
 ```
+
+###Conclusions
+Step activity peaks in the beggining and the middle of the day. 
+Activity patterns are notably different during weekends vs weekdays, as people see to move more and more evenly throughout the day during weekends.
