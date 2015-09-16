@@ -15,7 +15,7 @@ This assignment makes use of data from a personal activity monitoring device tha
 
 ### Loading and preprocessing the data
 
-``` {r echo=TRUE, message=FALSE}
+``` {r echo=TRUE, message=FALSE, warning=FALSE}
 dataset <- read.csv("activity.csv")
 ```
 
@@ -39,15 +39,15 @@ The mean number of steps taken each day is  **`r mn `** and the median number of
 
 To visualize the daily activity pattern, here is a time series plot  of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
 
-``` {r echo=TRUE, message=FALSE}
+``` {r echo=TRUE, message=FALSE, warning=FALSE}
 interval <- group_by(dataset,as.factor( interval)) %>% summarize(daily_avg_steps=mean(steps, na.rm=TRUE))
 names(interval)[1]<-"interval_class"
-plot(interval$interval_class, interval$daily_avg_steps,main="Activity Pattern, across a day (avg)", ylab="# of Steps, on average", col= "violet", xlab="5 minute interval" , type="l")
+qplot(as.integer(interval$interval_class), interval$daily_avg_steps,main="Activity Pattern, across a day (avg)", ylab="# of Steps, on average", col= "violet",geom="line", xlab="5 minute interval" )
 ```
 
 Next I will identify **which 5-minute interval**, on average across all the days in the dataset, contains the **maximum number of steps**. I can see from the plot this is somewhere in the [800,1000] zone, yet I can get the exact value with the following calculation
 
-``` {r echo=TRUE, message= FALSE}
+``` {r echo=TRUE, message= FALSE, warning=FALSE}
 max_act_int<- interval$interval_class[interval$daily_avg_steps==max(interval$daily_avg_steps)]
 ```
 The 5-minute interval that on average across all the days in the dataset contains the maximum number of steps is  
@@ -55,22 +55,22 @@ the **`r  droplevels(max_act_int) ` th **
 
 ### Handling missing values (NAs)
 To exclude bias introduced by NAs, I will clean-up my missing values after calculating how many of them exist.
-``` {r echo=TRUE, message= FALSE}
+``` {r echo=TRUE, message= FALSE, warning=FALSE}
 x<- sum(is.na(dataset))
 ```
 There are **`r x`** missing values in my dataset.
    
-To fill in  all of the missing values in the dataset, I will use the daily mean to fill-in the missing data.  
-``` {r echo=TRUE}
+To fill in  all of the missing values in the dataset, I will use the daily mean to fill-in the missing data.  To do so I will indentify NA position and replace their value with the mean of the day from the respective daily mean table.
+
+``` {r echo=TRUE, message=FALSE, warning=FALSE}
 #get the indexes where NAs are located in the dataset, "index"    
-index<- which(is.na(dataset)) 
-i<-1
+index<- which(is.na(dataset)) ; i<-1
 dailymean<- summarize(daily,avg_steps= mean(steps, na.rm=TRUE))
 # are there any NAs still remaining in the table of means? Making an index with NA positions in the dataframe of daily means, "index2"
 index2<- which(is.na(dailymean[,2]))
 # yes, so I will replace them with 0 
 dailymean[index2,2]<-0
-#start building the timeseries filled with mean daily values
+#start building the timeseries where NAs are replaced with daily mean values
 timeseries<-dataset
 for (i in 1:length(index)) 
   {
@@ -78,21 +78,21 @@ for (i in 1:length(index))
     index3<-  which(timeseries[index[i],2]==dailymean$date)
     timeseries[index[i],1]<-dailymean[index3,2] 
    }   
-head(timeseries)
 ```
    
 ###Re-evaluate mean and median of total steps per day
 Next I will make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day.
 
-```{r echo=TRUE, message=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 
 total_timeseries<- group_by(timeseries, date=as.factor(date)) %>% summarize(total_steps=sum(steps, na.rm=TRUE))
-ggplot(total_timeseries, aes(x=total_steps)) + geom_histogram(binwidth =1000) +labs( title="Total Daily Steps Histogram", y="Frequency in dataset", x="# Total Daily Steps")
+ggplot(total_timeseries, aes(x=total_steps)) + geom_histogram(binwidth =1000) +labs( title="Total Daily Steps Histogram (NAs replaced)", y="Frequency in dataset", x="# Total Daily Steps")
 
 #Calculate new mean/median and their % change vs previous values
 mnn<- mean(total_timeseries$total_steps) ; mdn<- median(total_timeseries$total_steps)
 mean_change<- (mnn/mn-1)*100 ; median_change<- (mdn/md-1)*100
 ```
+
 The new mean is ** `r round(mnn,2)` ** while previously it was ** `r round(mn,2)` **.  
 The new median is ** `r round(mdn,2)` ** while previously it was ** `r round(md,2)` **.  
 I see that the change is practically zero, the mean has changed by **`r round(mean_change,6)` ** %  and median has changed by ** `r median_change` ** % .
@@ -102,14 +102,14 @@ I see that the change is practically zero, the mean has changed by **`r round(me
 To understand if there are any **differences in activity patters between weekdays and weekends**, first I will manipulate my dataset, regrouping the steps by a new factor variable with two levels -- "weekday" and "weekend" mapped on the dates.  
 Then I  will make a panel plot containing a time series plot  of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
 
-``` {r echo=TRUE, message=FALSE}
+``` {r echo=TRUE, message=FALSE, warning=FALSE}
 #remake my data set
 WE <-c("Saturday", "Sunday")
 w_series<- mutate(timeseries, weekday= weekdays(as.Date(date)), w_class = factor(1*(weekday %in% WE), labels=c("weekend", "weekday")))
 ww<- group_by(w_series, w_class=as.factor(w_class), interval=as.factor(interval)) %>% summarize(avg_steps=mean(steps, na.rm=TRUE))
 
 # Plot the activity patterns
-ggplot(data=ww,aes(x=interval,y=avg_steps)) + geom_point(colour='red') + facet_wrap(~w_class, scales="free",  nrow = 2) +labs( title="Activity Patterns", y="Frequency in dataset", x="# average steps")
+ggplot(data=ww,aes(x=as.integer(interval),y=avg_steps)) + facet_wrap(~w_class, scales="free",  nrow = 2)+geom_line() + labs( title="Activity Patterns", y="Frequency in dataset", x="# average steps")
 ```
 
 ###Conclusions
