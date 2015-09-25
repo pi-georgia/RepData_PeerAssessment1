@@ -1,8 +1,11 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-author: pi-georgia
+title: 'Reproducible Research: Peer Assessment 1'
+author: "pi-georgia"
 date: "September 14, 2015"
-output: html_document
+output:
+  html_document:
+    fig_caption: yes
+    keep_md: yes
 ---
 #Overview
 It is now possible to collect a large amount of data about personal movement using activity monitoring devices. 
